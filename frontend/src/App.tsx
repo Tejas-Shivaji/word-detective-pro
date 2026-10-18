@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import DatasetLab, { type DatasetSummary } from "./DatasetLab";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
@@ -46,6 +47,9 @@ function App() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [activePage, setActivePage] = useState("Text Analysis");
+  const [datasetToken, setDatasetToken] = useState<string | null>(null);
+  const [datasetSummary, setDatasetSummary] = useState<DatasetSummary | null>(null);
+  const [datasetExpiresAt, setDatasetExpiresAt] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,7 +102,10 @@ function App() {
     try {
       const response = await fetch(`${API_BASE}/api/analyze-text`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(datasetToken ? { "X-Dataset-Token": datasetToken } : {}),
+        },
         body: JSON.stringify({ text, terms: selectedTerms }),
       });
 
@@ -149,7 +156,7 @@ function App() {
         </button>
         <button className={`nav-item ${activePage === "Dataset Lab" ? "active" : ""}`} onClick={() => setActivePage("Dataset Lab")}>
           <span className="nav-icon">▤</span> Dataset Lab
-          <span className="soon-label">NEXT</span>
+          <span className="nav-badge">{datasetToken ? "ACTIVE" : "02"}</span>
         </button>
         <button className={`nav-item ${activePage === "Word Explorer" ? "active" : ""}`} onClick={() => setActivePage("Word Explorer")}>
           <span className="nav-icon">⌘</span> Word Explorer
@@ -197,8 +204,8 @@ function App() {
               <article className="overview-card">
                 <span className="card-icon">▤</span>
                 <h3>Dataset Lab</h3>
-                <p>Next milestone: validate a CSV and upload a temporary research dataset.</p>
-                <span className="muted-label">IN DEVELOPMENT</span>
+                <p>{datasetSummary ? `Active dataset: ${datasetSummary.rows.toLocaleString()} records, ${datasetSummary.columns.length} columns.` : "Validate a labelled CSV, review the real summary, and upload a temporary research dataset."}</p>
+                <button className="text-link" onClick={() => setActivePage("Dataset Lab")}>{datasetSummary ? "Manage dataset ↗" : "Open Dataset Lab ↗"}</button>
               </article>
               <article className="overview-card">
                 <span className="card-icon">⌘</span>
@@ -208,6 +215,15 @@ function App() {
               </article>
             </div>
           </section>
+        ) : activePage === "Dataset Lab" ? (
+          <DatasetLab
+            datasetToken={datasetToken}
+            setDatasetToken={setDatasetToken}
+            datasetSummary={datasetSummary}
+            setDatasetSummary={setDatasetSummary}
+            datasetExpiresAt={datasetExpiresAt}
+            setDatasetExpiresAt={setDatasetExpiresAt}
+          />
         ) : activePage !== "Text Analysis" ? (
           <section className="page-content">
             <div className="eyebrow">COMING NEXT</div>
