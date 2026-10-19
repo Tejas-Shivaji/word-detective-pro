@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./WordExplorer.css";
 
 const API_BASE = (
@@ -142,8 +142,11 @@ export default function WordExplorer({
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
   const [detailError, setDetailError] = useState("");
+  const wordsRequestId = useRef(0);
 
   const loadWords = useCallback(async () => {
+    const requestId = ++wordsRequestId.current;
+
     if (!datasetToken) {
       setData(null);
       setSelected(null);
@@ -173,16 +176,22 @@ export default function WordExplorer({
       }
 
       const page: WordPage = await response.json();
-      setData(page);
+      if (requestId === wordsRequestId.current) {
+        setData(page);
+      }
     } catch (err) {
-      setData(null);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load vocabulary from the API.",
-      );
+      if (requestId === wordsRequestId.current) {
+        setData(null);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load vocabulary from the API.",
+        );
+      }
     } finally {
-      setLoading(false);
+      if (requestId === wordsRequestId.current) {
+        setLoading(false);
+      }
     }
   }, [datasetToken, offset, minCount, minDocuments]);
 
