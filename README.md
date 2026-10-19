@@ -4,9 +4,12 @@ Explainable NLP and writing-pattern research platform. **Not an authorship detec
 
 ## Status and scope
 
-This feature branch implements the initial Python research backend, not the complete dashboard. No original dataset was available. No demonstration corpus, classifier, model score, frontend, deployment or held-out evaluation is claimed. Tests contain explicitly constructed fixtures only.
+The repository contains a React + TypeScript frontend, a FastAPI research backend, a bounded CSV dataset workflow, and a Word Explorer for comparing vocabulary across user-labelled groups. The application is a research tool, **not an authorship detector**. Labels and provenance are supplied by the uploader and are not independently verified.
 
-Code has been committed, but **lint, tests, package installation, dependency resolution and builds have not been executed in the authoring environment**, which has no shell. The GitHub connector failed to write `.github/workflows/ci.yml`; readback did not find it and no Actions runs were reported. The complete intended workflow is preserved below for installation at that approved path. An initial incomplete API-test commit was corrected without rewriting history.
+The backend test suite has passed locally (77 tests), and the frontend production build and lint have passed locally. The merged Word Explorer filter-refresh fix also passed the pull request's backend-test and frontend-build CI checks. These checks do not replace live browser testing, deployment validation, or a security review.
+
+No verified authorship dataset or validated authorship classifier is included. Synthetic examples are for application testing only and must not be treated as evidence of actual authorship.
+
 
 ## Architecture
 
@@ -37,7 +40,7 @@ Use Python **3.11 or 3.12**, Git, and a private clone. POSIX commands:
 ```bash
 git clone https://github.com/Tejas-Shivaji/word-detective-pro.git
 cd word-detective-pro
-git switch feature/research-core
+git switch main
 cd backend
 python3.12 -m venv .venv
 . .venv/bin/activate
@@ -121,85 +124,14 @@ No pass count is asserted. Tests cover Unicode, counts, zero denominators, known
 
 A 404 dataset error means missing/expired handle; re-upload. A 415 means wrong upload content type. A 413 means configured limits were exceeded. A 429 is the global request budget. A 503 indicates compute/session capacity. Do not weaken safety limits without resource testing.
 
-## GitHub Actions installation (connector write blocked)
+## Automated verification
 
-The connector returned an unspecified failure for the workflow write, not a confirmed permission diagnosis. Ordinary commits succeeded. If authentication uses classic OAuth/PAT, verify `workflow` scope as well as private-repository access; for fine-grained credentials verify repository **Contents: write** and **Workflows: write**. Also check repository Actions policy. Do not paste credentials into chat or files.
+GitHub Actions is configured in `.github/workflows/ci.yml`. Pull requests targeting `main` run the backend test suite and frontend production build. Pushes to `main` and `feature/research-core` also trigger the configured workflow.
 
-Create `.github/workflows/ci.yml` **on `feature/research-core`**, using exactly the YAML below, and commit with `ci: run backend lint and automated tests`. This is the only approved file not yet committed. The next push should run the matrix. Inspect each run before claiming success. No merge or deployment is included.
+The latest reviewed fix pull request passed both required checks:
+- Backend tests
+- Frontend production build
 
-```yaml
-name: Backend verification
-on:
-  push:
-    branches: [main, 'feature/research-core']
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-permissions:
-  contents: read
-concurrency:
-  group: backend-${{ github.ref }}
-  cancel-in-progress: true
-jobs:
-  backend:
-    name: Python ${{ matrix.python }} lint, tests and build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 12
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ['3.11', '3.12']
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-          cache: pip
-          cache-dependency-path: backend/pyproject.toml
-      - name: Install pinned direct dependencies
-        run: |
-          python -m pip install --disable-pip-version-check -e '.[dev]'
-          python -m pip check
-      - name: Lint
-        run: python -m ruff check word_detective tests
-      - name: Unit and HTTP contract tests
-        run: python -m pytest -q --junitxml=test-results.xml
-      - name: Build backend wheel and source distribution
-        run: python -m build
-      - name: Verify installed wheel and live health endpoint
-        run: |
-          python -m venv /tmp/wdp-wheel-check
-          /tmp/wdp-wheel-check/bin/python -m pip install dist/*.whl
-          cd /tmp
-          /tmp/wdp-wheel-check/bin/python -m uvicorn word_detective.api:app --host 127.0.0.1 --port 8765 --no-access-log &
-          SERVER_PID=$!
-          trap 'kill "$SERVER_PID"' EXIT
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:8765/api/health > /tmp/wdp-health.json; then
-              python -c 'import json; assert json.load(open("/tmp/wdp-health.json"))["status"] == "ok"'
-              exit 0
-            fi
-            sleep 1
-          done
-          echo 'Health check did not become ready'
-          exit 1
-      - name: Record resolved dependencies
-        if: always()
-        run: python -m pip freeze > resolved-dependencies.txt
-      - name: Preserve verification evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-evidence-python-${{ matrix.python }}
-          retention-days: 7
-          if-no-files-found: warn
-          path: |
-            backend/test-results.xml
-            backend/resolved-dependencies.txt
-            backend/dist/*
-```
+Frontend lint has been verified locally, but it is not a separate job in the current CI workflow.
+
+These checks establish that the configured jobs passed for that pull request; they do not establish production deployment readiness. Live browser testing, security review, load testing, authentication, TLS and deployment safeguards remain separate tasks.
