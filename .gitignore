@@ -218,3 +218,36 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Word Detective: frontend dependencies and generated assets
+node_modules/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Local secrets; only an explicitly reviewed example may be tracked
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Private research inputs and outputs must never be committed by default
+/uploads/
+/datasets/
+/results/
+/models/
+/private/
+/backend/uploads/
+/backend/datasets/
+/backend/results/
+/backend/models/
+*.csv
+*.parquet
+*.sqlite
+*.sqlite3
+*.joblib
+*.pkl
+
+# Local verification evidence (CI stores these as short-lived artifacts)
+test-results.xml
+resolved-dependencies.txt

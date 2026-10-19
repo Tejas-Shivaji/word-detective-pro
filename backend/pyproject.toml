@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "word-detective-pro"
+version = "0.1.0"
+description = "Explainable corpus statistics for writing-pattern research, not authorship detection"
+requires-python = ">=3.11,<3.13"
+license = "MIT"
+dependencies = [
+  "fastapi==0.128.0",
+  "starlette==0.50.0",
+  "pydantic==2.12.5",
+  "uvicorn==0.40.0",
+  "numpy==2.2.6",
+  "scipy==1.15.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.4.2",
+  "httpx==0.28.1",
+  "ruff==0.14.10",
+  "build==1.3.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["word_detective*"]
+namespaces = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
