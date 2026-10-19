@@ -244,6 +244,37 @@ export default function WordExplorer({
     }
   }
 
+  function downloadWordReport() {
+    if (!selected) return;
+
+    const reportJson = JSON.stringify(
+      {
+        report_type: "word-detective-word-report",
+        exported_at: new Date().toISOString(),
+        ...selected,
+      },
+      null,
+      2,
+    );
+
+    const blob = new Blob([reportJson], {
+      type: "application/json;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeWord = selected.result.word
+      .toLocaleLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "word";
+
+    link.href = url;
+    link.download = `word-report-${safeWord}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   function applyThresholds() {
     setOffset(0);
     setSelected(null);
@@ -474,6 +505,15 @@ export default function WordExplorer({
               <div className="eyebrow">WORD REPORT</div>
               <h2>{detailWord}</h2>
             </div>
+            {selected && !detailLoading && (
+              <button
+                className="wx-detail-link"
+                onClick={downloadWordReport}
+                type="button"
+              >
+                Download JSON
+              </button>
+            )}
             <button
               className="wx-detail-link"
               onClick={() => {
@@ -481,6 +521,7 @@ export default function WordExplorer({
                 setSelected(null);
                 setDetailError("");
               }}
+              type="button"
             >
               Close
             </button>
