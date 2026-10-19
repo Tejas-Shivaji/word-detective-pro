@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import DatasetLab, { type DatasetSummary } from "./DatasetLab";
+import WordExplorer from "./WordExplorer";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
@@ -160,7 +161,7 @@ function App() {
         </button>
         <button className={`nav-item ${activePage === "Word Explorer" ? "active" : ""}`} onClick={() => setActivePage("Word Explorer")}>
           <span className="nav-icon">⌘</span> Word Explorer
-          <span className="soon-label">NEXT</span>
+          <span className="nav-badge">{datasetToken ? "LIVE" : "03"}</span>
         </button>
 
         <div className="sidebar-bottom">
@@ -210,8 +211,8 @@ function App() {
               <article className="overview-card">
                 <span className="card-icon">⌘</span>
                 <h3>Word Explorer</h3>
-                <p>Next milestone: explore word frequency and document prevalence by group.</p>
-                <span className="muted-label">IN DEVELOPMENT</span>
+                <p>Compare word frequency, document prevalence, and statistical uncertainty across AI-labelled and human-labelled documents.</p>
+                <button className="text-link" onClick={() => setActivePage("Word Explorer")}>Explore vocabulary ↗</button>
               </article>
             </div>
           </section>
@@ -224,6 +225,8 @@ function App() {
             datasetExpiresAt={datasetExpiresAt}
             setDatasetExpiresAt={setDatasetExpiresAt}
           />
+        ) : activePage === "Word Explorer" ? (
+          <WordExplorer datasetToken={datasetToken} onOpenDatasetLab={() => setActivePage("Dataset Lab")} />
         ) : activePage !== "Text Analysis" ? (
           <section className="page-content">
             <div className="eyebrow">COMING NEXT</div>
