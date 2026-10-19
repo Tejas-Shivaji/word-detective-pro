@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen, waitFor, act } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, act } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import WordExplorer from "./WordExplorer";
 
@@ -48,6 +48,7 @@ function jsonResponse(body: unknown) {
 }
 
 afterEach(() => {
+  cleanup();
   vi.unstubAllGlobals();
 });
 
@@ -93,5 +94,77 @@ describe("WordExplorer request ordering", () => {
       expect(screen.getByText("newest-word")).toBeInTheDocument();
       expect(screen.queryByText("older-word")).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("WordExplorer controls", () => {
+  it("applies support thresholds and resets the page offset", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ ...page("first-word"), total: 100 }))
+      .mockResolvedValueOnce(jsonResponse({ ...page("filtered-word"), total: 1 }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <WordExplorer
+        datasetToken="test-token"
+        onOpenDatasetLab={() => undefined}
+      />,
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    fireEvent.change(screen.getByLabelText(/minimum occurrences/i), {
+      target: { value: "3" },
+    });
+    fireEvent.change(screen.getByLabelText(/minimum documents/i), {
+      target: { value: "2" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /apply filters/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    const requestedUrl = String(fetchMock.mock.calls[1][0]);
+    const params = new URL(requestedUrl).searchParams;
+
+    expect(params.get("offset")).toBe("0");
+    expect(params.get("min_count")).toBe("3");
+    expect(params.get("min_documents")).toBe("2");
+    expect(await screen.findByText("filtered-word")).toBeInTheDocument();
+  });
+
+  it("requests the next page with the correct offset", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        jsonResponse({ ...page("first-page-word"), total: 50 }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          ...page("second-page-word", 25),
+          total: 50,
+          offset: 25,
+        }),
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <WordExplorer
+        datasetToken="test-token"
+        onOpenDatasetLab={() => undefined}
+      />,
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    fireEvent.click(await screen.findByRole("button", { name: /next/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    const requestedUrl = String(fetchMock.mock.calls[1][0]);
+    const params = new URL(requestedUrl).searchParams;
+
+    expect(params.get("offset")).toBe("25");
+    expect(params.get("limit")).toBe("25");
+    expect(await screen.findByText("second-page-word")).toBeInTheDocument();
   });
 });
