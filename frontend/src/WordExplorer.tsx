@@ -239,7 +239,6 @@ export default function WordExplorer({
     setOffset(0);
     setSelected(null);
     setDetailWord("");
-    void loadWords();
   }
 
   const activeError = /expired|unknown|session/i.test(error);
