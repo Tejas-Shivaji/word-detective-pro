@@ -221,3 +221,45 @@ describe("WordExplorer API states", () => {
     expect(screen.getByText(/showing 0–0 of 0/i)).toBeInTheDocument();
   });
 });
+
+describe("WordExplorer word report API", () => {
+  it("sends the dataset token and displays an API error when a word report fails", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(page("word with space")))
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: async () => ({
+          error: { message: "Report service unavailable" },
+        }),
+      } as Response);
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <WordExplorer
+        datasetToken="test-token"
+        onOpenDatasetLab={() => undefined}
+      />,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /inspect/i }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Report service unavailable",
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    const [requestedUrl, options] = fetchMock.mock.calls[1];
+
+    expect(String(requestedUrl)).toContain(
+      "/api/words/word%20with%20space?resamples=500",
+    );
+    expect(options.headers).toEqual({
+      "X-Dataset-Token": "test-token",
+    });
+  });
+});
