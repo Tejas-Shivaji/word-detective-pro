@@ -168,3 +168,56 @@ describe("WordExplorer controls", () => {
     expect(await screen.findByText("second-page-word")).toBeInTheDocument();
   });
 });
+
+describe("WordExplorer API states", () => {
+  it("shows the API error message when vocabulary loading fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({
+        error: { message: "Service unavailable" },
+      }),
+    } as Response);
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <WordExplorer
+        datasetToken="test-token"
+        onOpenDatasetLab={() => undefined}
+      />,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Service unavailable",
+    );
+
+    expect(
+      screen.getByText(/no word list available/i),
+    ).toBeInTheDocument();
+  });
+
+  it("shows an empty state when the API returns no matching words", async () => {
+    const emptyPage = {
+      ...page("unused-word"),
+      total: 0,
+      items: [],
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(emptyPage));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <WordExplorer
+        datasetToken="test-token"
+        onOpenDatasetLab={() => undefined}
+      />,
+    );
+
+    expect(
+      await screen.findByText("No words meet these support thresholds."),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText(/showing 0–0 of 0/i)).toBeInTheDocument();
+  });
+});
