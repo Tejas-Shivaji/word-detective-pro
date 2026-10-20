@@ -6,16 +6,15 @@ Explainable NLP and writing-pattern research platform. **Not an authorship detec
 
 The repository contains a React + TypeScript frontend, a FastAPI research backend, a bounded CSV dataset workflow, and a Word Explorer for comparing vocabulary across user-labelled groups. The application is a research tool, **not an authorship detector**. Labels and provenance are supplied by the uploader and are not independently verified.
 
-The backend test suite has passed locally (77 tests), and the frontend production build and lint have passed locally. The merged Word Explorer filter-refresh fix also passed the pull request's backend-test and frontend-build CI checks. These checks do not replace live browser testing, deployment validation, or a security review.
+Local verification completed: 77 backend tests passed, frontend tests passed (6 tests), frontend lint passed, and the production build passed. The local browser workflow was also exercised end to end: synthetic CSV upload, validation/activation, Word Explorer, word inspection, and JSON export. An intentionally invalid CSV was rejected while the previously active dataset remained usable. The maintainer reports that the latest GitHub Actions checks are green. These checks do not replace deployment validation, security review, or load testing.
 
 No verified authorship dataset or validated authorship classifier is included. Synthetic examples are for application testing only and must not be treated as evidence of actual authorship.
-
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Client["Future React client or HTTP client"] --> API["FastAPI schemas and request limits"]
+    Client["React + TypeScript frontend or HTTP client"] --> API["FastAPI schemas and request limits"]
     API --> Core["CSV validation and corpus analysis"]
     API --> Sessions["Bounded ephemeral dataset sessions"]
     Core --> Statistics["Document bootstrap, Fisher test and BH"]
@@ -23,33 +22,59 @@ flowchart LR
 
 | Path | Responsibility |
 |---|---|
+| `frontend/` | React + TypeScript user interface, tests, lint and production build |
 | `backend/word_detective/core.py` | Typed corpus snapshots, strict CSV loading, preprocessing and statistics |
 | `backend/word_detective/api.py` | HTTP schemas, errors, CORS, body limits and bearer dataset sessions |
 | `backend/tests/test_core.py` | Constructed statistical and preprocessing fixtures |
 | `backend/tests/test_api.py` | API contracts, validation, privacy and resource limits |
 | `backend/pyproject.toml` | Direct dependency pins, packaging, pytest and Ruff configuration |
-| `.gitignore` | Existing Python rules plus frontend, private-data and secret exclusions |
-| `LICENSE` | Existing MIT license, copyright 2026 Tejas G; unchanged |
+| `.gitignore` | Python, frontend, private-data and secret exclusions |
+| `LICENSE` | MIT license |
 
 Standard-library CSV and a documented Unicode regex replace unnecessary pandas/NLTK downloads for this bounded initial implementation. NumPy/SciPy provide statistical calculations. Python namespace packaging intentionally avoids adding unapproved `__init__.py` files.
 
 ## Local setup
 
-Use Python **3.11 or 3.12**, Git, and a private clone. POSIX commands:
+Use Python **3.11 or 3.12**, Git, and Node.js compatible with the frontend toolchain. Clone the repository:
 
 ```bash
 git clone https://github.com/Tejas-Shivaji/word-detective-pro.git
 cd word-detective-pro
 git switch main
-cd backend
-python3.12 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e '.[dev]'
+```
+
+### Windows with Git Bash
+
+Create the backend virtual environment and install its dependencies:
+
+```bash
+cd ~/word-detective-pro/backend
+py -3.12 -m venv .venv
+source .venv/Scripts/activate
+python -m pip install -e ".[dev]"
 python -m pip check
+```
+
+Start the backend in **Terminal 1**:
+
+```bash
+cd ~/word-detective-pro/backend
+source .venv/Scripts/activate
+export WDP_CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
 python -m uvicorn word_detective.api:app --host 127.0.0.1 --port 8000 --workers 1 --no-access-log
 ```
 
-On Windows, use `py -3.12 -m venv .venv` and `.venv\Scripts\Activate.ps1`. Open `http://127.0.0.1:8000/docs` for OpenAPI and `/api/health` for liveness. No keys, database or external LLM are required. Health reports no global configured dataset; sessions are client-specific.
+Keep that terminal open. In **Terminal 2**, start the frontend:
+
+```bash
+cd ~/word-detective-pro/frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173/` for the app, `http://127.0.0.1:8000/docs` for OpenAPI, and `http://127.0.0.1:8000/api/health` for liveness. If port 8000 is already occupied, check the existing process and health endpoint before starting another backend. The API requires one worker while dataset sessions are held in process memory. No keys, database or external LLM are required. Health reports no global configured dataset; sessions are client-specific.
+
+On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. On POSIX systems, use `python3.12 -m venv .venv` and `. .venv/bin/activate`.
 
 | Environment variable | Default |
 |---|---|
@@ -59,7 +84,7 @@ On Windows, use `py -3.12 -m venv .venv` and `.venv\Scripts\Activate.ps1`. Open 
 | `WDP_TTL_SECONDS` | `900` |
 | `WDP_CORS_ORIGINS` | Empty; cross-origin access disabled |
 
-For future local React integration, explicitly set `WDP_CORS_ORIGINS=http://localhost:5173`. No wildcard origins. Additional typed `Settings`/`Limits` control 30 columns, 20,000 characters/document, 200,000 total tokens, 10,000 vocabulary items, two concurrent analyses and 120 research requests/minute globally.
+For local React integration, set `WDP_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`. Do not use wildcard origins. Additional typed `Settings`/`Limits` control 30 columns, 20,000 characters/document, 200,000 total tokens, 10,000 vocabulary items, two concurrent analyses and 120 research requests/minute globally.
 
 ## CSV contract and provenance
 
@@ -112,26 +137,21 @@ No client filenames are used; content is never executed. Validation errors omit 
 
 ## Verification and troubleshooting
 
+Run from `backend/` after activating the virtual environment:
+
 ```bash
-cd backend  # from repository root, after activating the virtual environment
 python -m pip check
 python -m ruff check word_detective tests
-python -m pytest -q --junitxml=test-results.xml
+python -m pytest -q
 python -m build
 ```
 
-No pass count is asserted. Tests cover Unicode, counts, zero denominators, known statistical values, resampling reproducibility, duplicates, filters, schemas, malformed/oversized CSV, chunked bodies, text validation, CORS, session isolation/expiry, rate limits and safe errors. Untested: frontend, deployed workflows, classifier evaluation, stress/security audits and dependency installation until these commands actually run. Direct dependencies are pinned; transitive dependencies are not locked. CI captures resolved versions for review.
+The backend suite passed locally (77 tests). The frontend suite passed locally (6 tests), and frontend lint and production build passed. Tests cover Unicode, counts, zero denominators, known statistical values, resampling reproducibility, duplicates, filters, schemas, malformed/oversized CSV, chunked bodies, text validation, CORS, session isolation/expiry, rate limits and safe errors. Local browser checks covered valid CSV upload through JSON export and rejection of an invalid-header CSV. These checks do not cover production deployment, classifier evaluation, stress/security audits, or public-facing operational safeguards. Direct dependencies are pinned; transitive dependencies are not locked.
 
 A 404 dataset error means missing/expired handle; re-upload. A 415 means wrong upload content type. A 413 means configured limits were exceeded. A 429 is the global request budget. A 503 indicates compute/session capacity. Do not weaken safety limits without resource testing.
 
 ## Automated verification
 
-GitHub Actions is configured in `.github/workflows/ci.yml`. Pull requests targeting `main` run the backend test suite and frontend production build. Pushes to `main` and `feature/research-core` also trigger the configured workflow.
+GitHub Actions is configured in `.github/workflows/ci.yml`. It runs backend tests, frontend tests, and frontend lint plus production build. The maintainer reports that the latest Actions run is green.
 
-The latest reviewed fix pull request passed both required checks:
-- Backend tests
-- Frontend production build
-
-Frontend lint has been verified locally, but it is not a separate job in the current CI workflow.
-
-These checks establish that the configured jobs passed for that pull request; they do not establish production deployment readiness. Live browser testing, security review, load testing, authentication, TLS and deployment safeguards remain separate tasks.
+Passing CI and local checks do not establish production deployment readiness. Security review, load testing, authentication, TLS and deployment safeguards remain separate tasks.
