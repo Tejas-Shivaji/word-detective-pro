@@ -10,6 +10,8 @@ Local verification completed: 77 backend tests passed, frontend tests passed (6 
 
 No verified authorship dataset or validated authorship classifier is included. Synthetic examples are for application testing only and must not be treated as evidence of actual authorship.
 
+**Known issue:** Browser-based Dataset Lab CSV validation can return `422 empty_dataset` even when the request payload appears present. The root cause is unconfirmed. Track the investigation in [issue #12](https://github.com/Tejas-Shivaji/word-detective-pro/issues/12). A successful direct API validation does not by itself confirm that the browser workflow is working.
+
 ## Architecture
 
 ```mermaid
