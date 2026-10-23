@@ -262,3 +262,19 @@ def test_store_clear_and_normalized_not_raw_retention():
     store.clear()
     with pytest.raises(ResearchError):
         store.get(token)
+
+
+def test_deployment_limits_from_environment(monkeypatch):
+    monkeypatch.setenv("WDP_REQUESTS_PER_MINUTE", "45")
+    monkeypatch.setenv("WDP_CONCURRENT_ANALYSES", "1")
+    settings = Settings.from_env()
+    assert settings.requests_per_minute == 45
+    assert settings.concurrent_analyses == 1
+
+
+def test_deployment_limit_defaults(monkeypatch):
+    monkeypatch.delenv("WDP_REQUESTS_PER_MINUTE", raising=False)
+    monkeypatch.delenv("WDP_CONCURRENT_ANALYSES", raising=False)
+    settings = Settings.from_env()
+    assert settings.requests_per_minute == 120
+    assert settings.concurrent_analyses == 2

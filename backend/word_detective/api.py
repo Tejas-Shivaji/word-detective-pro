@@ -55,7 +55,14 @@ class Settings:
             max_bytes=int(os.getenv("WDP_MAX_BYTES", "2000000")),
             max_rows=int(os.getenv("WDP_MAX_ROWS", "1000")),
         )
-        return cls(limits=limits, max_sessions=int(os.getenv("WDP_MAX_SESSIONS", "4")), ttl_seconds=int(os.getenv("WDP_TTL_SECONDS", "900")), cors_origins=tuple(x.strip() for x in os.getenv("WDP_CORS_ORIGINS", "").split(",") if x.strip()))
+        return cls(
+            limits=limits,
+            max_sessions=int(os.getenv("WDP_MAX_SESSIONS", "4")),
+            ttl_seconds=int(os.getenv("WDP_TTL_SECONDS", "900")),
+            requests_per_minute=int(os.getenv("WDP_REQUESTS_PER_MINUTE", "120")),
+            concurrent_analyses=int(os.getenv("WDP_CONCURRENT_ANALYSES", "2")),
+            cors_origins=tuple(x.strip() for x in os.getenv("WDP_CORS_ORIGINS", "").split(",") if x.strip()),
+        )
 
 
 class ErrorBody(Schema):
