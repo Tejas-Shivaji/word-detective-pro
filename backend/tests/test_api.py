@@ -278,3 +278,8 @@ def test_deployment_limit_defaults(monkeypatch):
     settings = Settings.from_env()
     assert settings.requests_per_minute == 120
     assert settings.concurrent_analyses == 2
+
+
+def test_wildcard_cors_origin_is_rejected():
+    with pytest.raises(ValueError, match="CORS origins"):
+        Settings(cors_origins=("*",))
