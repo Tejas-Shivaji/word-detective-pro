@@ -84,6 +84,8 @@ On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1
 | `WDP_MAX_ROWS` | `1000` |
 | `WDP_MAX_SESSIONS` | `4` per process |
 | `WDP_TTL_SECONDS` | `900` |
+| `WDP_REQUESTS_PER_MINUTE` | `120`, global per-process request budget |
+| `WDP_CONCURRENT_ANALYSES` | `2`, concurrent analyses per process |
 | `WDP_CORS_ORIGINS` | Empty; cross-origin access disabled |
 
 For local React integration, set `WDP_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`. Do not use wildcard origins. Additional typed `Settings`/`Limits` control 30 columns, 20,000 characters/document, 200,000 total tokens, 10,000 vocabulary items, two concurrent analyses and 120 research requests/minute globally.
