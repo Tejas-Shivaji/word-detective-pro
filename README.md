@@ -1,4 +1,4 @@
-# Word Detective Pro
+﻿# Word Detective Pro
 
 Explainable NLP and writing-pattern research platform. **Not an authorship detector.** Corpus labels, word frequencies, p-values and confidence intervals cannot establish who or what authored a text.
 
@@ -6,7 +6,7 @@ Explainable NLP and writing-pattern research platform. **Not an authorship detec
 
 The repository contains a React + TypeScript frontend, a FastAPI research backend, a bounded CSV dataset workflow, and a Word Explorer for comparing vocabulary across user-labelled groups. The application is a research tool, **not an authorship detector**. Labels and provenance are supplied by the uploader and are not independently verified.
 
-Local verification completed: 77 backend tests passed, frontend tests passed (6 tests), frontend lint passed, and the production build passed. The local browser workflow was also exercised end to end: synthetic CSV upload, validation/activation, Word Explorer, word inspection, and JSON export. An intentionally invalid CSV was rejected while the previously active dataset remained usable. The maintainer reports that the latest GitHub Actions checks are green. These checks do not replace deployment validation, security review, or load testing.
+Local verification completed: 82 backend tests passed, 10 frontend tests passed, frontend lint passed, and the production build passed. The local browser workflow was exercised end to end: synthetic CSV upload, validation/activation, Word Explorer, word inspection, and JSON export. An intentionally invalid CSV was rejected while the previously active dataset remained usable. GitHub Actions passed all three checks for the merged Dataset Lab regression-test PR. The application is deployed on Render for demonstration/research use; this does not replace a security review, deployment monitoring, or load testing.
 
 No verified authorship dataset or validated authorship classifier is included. Synthetic examples are for application testing only and must not be treated as evidence of actual authorship.
 
@@ -137,7 +137,7 @@ Small p-values do not imply practical importance, generalization or authorship. 
 
 Raw CSV/text is processed transiently and never intentionally written to disk. Normalized tokens remain sensitive: they and selected metadata stay in bounded process memory. Sessions become inaccessible after TTL; expired entries are physically pruned on the next store access, not by a background timer. Restart clears memory. This is not forensic secure erasure. Validation and text analysis do not create sessions.
 
-No client filenames are used; content is never executed. Validation errors omit input echoes. Disable body/header logging at proxies too. A global budget is not fair per-user rate limiting; request buffering and slow clients still need ingress controls. Before any public deployment, add authentication, TLS, proxy byte/time/concurrency limits, dependency/security review and load testing. Use one worker until shared session storage is deliberately implemented. **Do not deploy this branch yet.**
+No client filenames are used; content is never executed. Validation errors omit input echoes. Disable body/header logging at proxies too. A global budget is not fair per-user rate limiting; request buffering and slow clients still need ingress controls. The current Render deployment should be treated as a demonstration/research service, not a hardened production service. Do not upload sensitive, confidential or personally identifying text. Before using it for sensitive data or production workloads, add authentication and authorization, verify TLS and proxy byte/time/concurrency limits, complete dependency/security review, and perform load testing. Use one worker until shared session storage is deliberately implemented.
 
 ## Verification and troubleshooting
 
@@ -150,12 +150,13 @@ python -m pytest -q
 python -m build
 ```
 
-The backend suite passed locally (77 tests). The frontend suite passed locally (6 tests), and frontend lint and production build passed. Tests cover Unicode, counts, zero denominators, known statistical values, resampling reproducibility, duplicates, filters, schemas, malformed/oversized CSV, chunked bodies, text validation, CORS, session isolation/expiry, rate limits and safe errors. Local browser checks covered valid CSV upload through JSON export and rejection of an invalid-header CSV. These checks do not cover production deployment, classifier evaluation, stress/security audits, or public-facing operational safeguards. Direct dependencies are pinned; transitive dependencies are not locked.
+The backend suite passed locally (82 tests). The frontend suite passed locally (10 tests), and frontend lint and production build passed. Tests cover Unicode, counts, zero denominators, known statistical values, resampling reproducibility, duplicates, filters, schemas, malformed/oversized CSV, chunked bodies, text validation, CORS, session isolation/expiry, rate limits and safe errors. Local browser checks covered valid CSV upload through JSON export and rejection of an invalid-header CSV. These checks do not cover production deployment, classifier evaluation, stress/security audits, or public-facing operational safeguards. Direct dependencies are pinned; transitive dependencies are not locked.
 
 A 404 dataset error means missing/expired handle; re-upload. A 415 means wrong upload content type. A 413 means configured limits were exceeded. A 429 is the global request budget. A 503 indicates compute/session capacity. Do not weaken safety limits without resource testing.
 
 ## Automated verification
 
-GitHub Actions is configured in `.github/workflows/ci.yml`. It runs backend tests, frontend tests, and frontend lint plus production build. The maintainer reports that the latest Actions run is green.
+GitHub Actions is configured in `.github/workflows/ci.yml`. It runs backend tests, frontend tests, and frontend lint plus production build. The GitHub Actions checks for the merged Dataset Lab regression-test PR passed: backend tests, frontend tests, and frontend lint plus production build.
 
 Passing CI and local checks do not establish production deployment readiness. Security review, load testing, authentication, TLS and deployment safeguards remain separate tasks.
+
