@@ -1,16 +1,59 @@
 # Word Detective Pro
 
-Explainable NLP and writing-pattern research platform. **Not an authorship detector.** Corpus labels, word frequencies, p-values and confidence intervals cannot establish who or what authored a text.
+**An explainable NLP research workbench for exploring writing patterns in labelled text corpora.**
 
-## Status and scope
+[![CI](https://github.com/Tejas-Shivaji/word-detective-pro/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Tejas-Shivaji/word-detective-pro/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11–3.12](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](backend/pyproject.toml)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](frontend/package.json)
 
-The repository contains a React + TypeScript frontend, a FastAPI research backend, a bounded CSV dataset workflow, and a Word Explorer for comparing vocabulary across user-labelled groups. The application is a research tool, **not an authorship detector**. Labels and provenance are supplied by the uploader and are not independently verified.
+**[🚀 Live Demo](https://word-detective-web.onrender.com)** · **[API Health](https://word-detective-api.onrender.com/api/health)** · **[GitHub Repository](https://github.com/Tejas-Shivaji/word-detective-pro)** · **[Known Issue #12](https://github.com/Tejas-Shivaji/word-detective-pro/issues/12)**
 
-Local verification completed: 77 backend tests passed, frontend tests passed (6 tests), frontend lint passed, and the production build passed. The local browser workflow was also exercised end to end: synthetic CSV upload, validation/activation, Word Explorer, word inspection, and JSON export. An intentionally invalid CSV was rejected while the previously active dataset remained usable. The maintainer reports that the latest GitHub Actions checks are green. These checks do not replace deployment validation, security review, or load testing.
+> **Research boundary:** Word Detective Pro is not an authorship detector. Corpus labels are supplied by the uploader and are not independently verified. Word frequencies, p-values and confidence intervals cannot establish who or what authored a text.
 
-No verified authorship dataset or validated authorship classifier is included. Synthetic examples are for application testing only and must not be treated as evidence of actual authorship.
+## Project Overview
 
-**Known issue:** Browser-based Dataset Lab CSV validation can return `422 empty_dataset` even when the request payload appears present. The root cause is unconfirmed. Track the investigation in [issue #12](https://github.com/Tejas-Shivaji/word-detective-pro/issues/12). A successful direct API validation does not by itself confirm that the browser workflow is working.
+Word Detective Pro combines a React + TypeScript frontend with a FastAPI research backend. It allows users to upload permitted-use CSV corpora, compare vocabulary across uploader-labelled groups, inspect word-level statistics and explore research-oriented linguistic patterns.
+
+### Key Features
+
+- **Dataset Lab:** Validate and upload bounded CSV datasets with required labels and provenance metadata.
+- **Word Explorer:** Explore vocabulary ranked by absolute frequency differences between labelled groups.
+- **Word-Level Analysis:** Inspect token frequency, document prevalence and statistical summaries.
+- **Statistical Methodology:** Fisher's exact tests, Benjamini–Hochberg adjustment, Wilson intervals and document-level bootstrap intervals where eligibility rules permit.
+- **Data Safeguards:** CSV validation, duplicate reporting, input limits and bounded in-memory dataset sessions.
+- **Research Transparency:** Explicit limitations around dataset provenance, statistical interpretation and authorship claims.
+
+### Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 19, TypeScript, Vite |
+| Backend | Python, FastAPI, Pydantic |
+| Data Processing | Standard-library CSV, Unicode regex |
+| Statistics | NumPy, SciPy |
+| Testing | Pytest, Vitest |
+| Code Quality | ESLint, Ruff |
+| Deployment | Render |
+| CI | GitHub Actions |
+
+### Deployment and Verification
+
+- **Live Application:** [word-detective-web.onrender.com](https://word-detective-web.onrender.com)
+- **Backend Health:** [word-detective-api.onrender.com/api/health](https://word-detective-api.onrender.com/api/health)
+- **Backend Tests:** 80 passed.
+- **Frontend Tests:** 10 passed.
+- **Frontend Lint:** Passed.
+- **Frontend Production Build:** Passed.
+- **Backend Warning:** One non-blocking deprecation warning from the installed Starlette test-client dependency.
+
+The application has also been manually exercised using a synthetic CSV corpus, including validation, upload, Word Explorer, word inspection and JSON export.
+
+**Known unresolved issue:** Browser-based Dataset Lab validation has previously returned `422 empty_dataset` despite an apparently present request payload. The root cause remains unconfirmed. Follow [Issue #12](https://github.com/Tejas-Shivaji/word-detective-pro/issues/12).
+
+These verification results describe recorded development checks. They do not establish production reliability or security readiness.
+
+No verified authorship dataset or validated authorship classifier is included. Synthetic examples are for application testing only.
 
 ## Architecture
 
@@ -21,6 +64,8 @@ flowchart LR
     API --> Sessions["Bounded ephemeral dataset sessions"]
     Core --> Statistics["Document bootstrap, Fisher test and BH"]
 ```
+
+### Repository Structure
 
 | Path | Responsibility |
 |---|---|
@@ -35,9 +80,11 @@ flowchart LR
 
 Standard-library CSV and a documented Unicode regex replace unnecessary pandas/NLTK downloads for this bounded initial implementation. NumPy/SciPy provide statistical calculations. Python namespace packaging intentionally avoids adding unapproved `__init__.py` files.
 
-## Local setup
+## Local Setup
 
-Use Python **3.11 or 3.12**, Git, and Node.js compatible with the frontend toolchain. Clone the repository:
+Use Python **3.11 or 3.12**, Git, and Node.js compatible with the frontend toolchain.
+
+Clone the repository:
 
 ```bash
 git clone https://github.com/Tejas-Shivaji/word-detective-pro.git
@@ -74,11 +121,32 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173/` for the app, `http://127.0.0.1:8000/docs` for OpenAPI, and `http://127.0.0.1:8000/api/health` for liveness. If port 8000 is already occupied, check the existing process and health endpoint before starting another backend. The API requires one worker while dataset sessions are held in process memory. No keys, database or external LLM are required. Health reports no global configured dataset; sessions are client-specific.
+Open the following local endpoints:
 
-On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. On POSIX systems, use `python3.12 -m venv .venv` and `. .venv/bin/activate`.
+- Application: `http://localhost:5173/`
+- OpenAPI documentation: `http://127.0.0.1:8000/docs`
+- Backend health: `http://127.0.0.1:8000/api/health`
 
-| Environment variable | Default |
+If port 8000 is already occupied, check the existing process and health endpoint before starting another backend.
+
+The API requires one worker while dataset sessions are held in process memory. No keys, database or external LLM are required. Health reports no global configured dataset; sessions are client-specific.
+
+On Windows PowerShell, activate the environment with:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+On POSIX systems, use:
+
+```bash
+python3.12 -m venv .venv
+. .venv/bin/activate
+```
+
+### Environment Variables
+
+| Environment Variable | Default |
 |---|---|
 | `WDP_MAX_BYTES` | `2000000`, all request bodies |
 | `WDP_MAX_ROWS` | `1000` |
@@ -88,24 +156,51 @@ On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1
 | `WDP_CONCURRENT_ANALYSES` | `2`, concurrent analyses per process |
 | `WDP_CORS_ORIGINS` | Empty; cross-origin access disabled |
 
-For local React integration, set `WDP_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`. Do not use wildcard origins. Additional typed `Settings`/`Limits` control 30 columns, 20,000 characters/document, 200,000 total tokens, 10,000 vocabulary items, two concurrent analyses and 120 research requests/minute globally.
-
-## CSV contract and provenance
-
-Supply your own permitted-use UTF-8 CSV, optionally with BOM. Required default columns are `text` and `label`, with exact labels `ai` and `human`. Configure column names and label mapping via upload query parameters. Both classes are required on import. Optional `category`, `source` and `subset` columns enable literal filters and per-class subgroup counts; these names are reserved.
-
-Unique trimmed headers and equal row widths are required. Missing values in **any** column reject the whole upload; nothing is silently removed. Empty-token documents, unmapped labels, invalid encoding/quoting, oversized inputs and overlong tokens are rejected. A `subset` value is user metadata, **not proof of an independent test split**.
-
-`source_origin` is required; optional `license_info`, `collection_version` and `limitations` record uploader assertions, not independently verified provenance. Unknown license defaults remain unknown. Dataset identity hashes input bytes; analysis identity additionally covers preprocessing, mappings, provenance, methodology and selected filters. MIT covers project code, not arbitrary uploaded datasets.
+For local React integration, set:
 
 ```bash
-# Replace /path/to/permitted.csv; no dataset is bundled.
+WDP_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+Do not use wildcard origins.
+
+Additional typed `Settings`/`Limits` control 30 columns, 20,000 characters/document, 200,000 total tokens, 10,000 vocabulary items, two concurrent analyses and 120 research requests/minute globally.
+
+## CSV Contract and Provenance
+
+Supply your own permitted-use UTF-8 CSV, optionally with BOM.
+
+Required default columns are `text` and `label`, with exact labels `ai` and `human`. Configure column names and label mapping via upload query parameters. Both classes are required on import.
+
+Optional `category`, `source` and `subset` columns enable literal filters and per-class subgroup counts; these names are reserved.
+
+Unique trimmed headers and equal row widths are required. Missing values in **any** column reject the whole upload; nothing is silently removed.
+
+Empty-token documents, unmapped labels, invalid encoding/quoting, oversized inputs and overlong tokens are rejected.
+
+A `subset` value is user metadata, **not proof of an independent test split**.
+
+`source_origin` is required; optional `license_info`, `collection_version` and `limitations` record uploader assertions, not independently verified provenance. Unknown license defaults remain unknown.
+
+Dataset identity hashes input bytes; analysis identity additionally covers preprocessing, mappings, provenance, methodology and selected filters.
+
+MIT covers project code, not arbitrary uploaded datasets.
+
+### Example CSV Upload
+
+Replace `/path/to/permitted.csv` with your own permitted-use dataset. No dataset is bundled.
+
+```bash
 curl --fail -X POST \
   'http://127.0.0.1:8000/api/datasets/upload?source_origin=User-provided%20research%20corpus' \
   -H 'Content-Type: text/csv' --data-binary @/path/to/permitted.csv
 ```
 
-Use the returned `dataset_token` as an `X-Dataset-Token` header, never in a URL. Treat it as a secret capability. For browser uploads, send the selected File directly as a raw `text/csv` body, **not FormData**.
+Use the returned `dataset_token` as an `X-Dataset-Token` header, never in a URL. Treat it as a secret capability.
+
+For browser uploads, send the selected File directly as a raw `text/csv` body, **not FormData**.
+
+## API Reference
 
 | Endpoint | Result |
 |---|---|
@@ -117,29 +212,114 @@ Use the returned `dataset_token` as an `X-Dataset-Token` header, never in a URL.
 | `GET /api/words/{word}` | Word statistics and eligible bootstrap intervals |
 | `POST /api/analyze-text` | Counts, selected terms and optional corpus comparison |
 
-Responses are Pydantic-schema documented. Errors use `{ "error": { "code": "...", "message": "..." } }`. Text-analysis bodies use `text`, optional `terms`, and optional `options`. With a dataset, explicit mismatched preprocessing is rejected.
+Responses are Pydantic-schema documented.
 
-## Methodology and limitations
+Errors use the following structure:
 
-Tokenization applies NFKC, optional casefolding, curved-apostrophe normalization and Unicode alphanumeric token matching, preserving internal apostrophes. Punctuation separates tokens; decimals split at punctuation. Numeric-only tokens are removed by default; alphanumeric tokens remain. Stop words are explicitly supplied, not a hidden language list. No stemming or lemmatization. Unicode regex segmentation is not reliable word segmentation for every language.
+```json
+{
+  "error": {
+    "code": "...",
+    "message": "..."
+  }
+}
+```
 
-For group g, token probability = word occurrences / total analysis tokens; frequency = 1000 times that probability. Prevalence = documents containing the word / documents in the group. Signed difference is AI-labelled minus human-labelled frequency; ranking uses its absolute value. Ratios are unsmoothed and null when the human denominator is zero or either token total is zero.
+Text-analysis bodies use `text`, optional `terms`, and optional `options`.
 
-Inference requires at least 10 documents per group and no normalized-text duplicates; these are conservative eligibility rules, not guarantees. Prevalence uses Wilson intervals and two-sided Fisher exact tests. BH adjusts over the entire selected vocabulary **before display/support filtering**. Its FDR interpretation assumes independence or suitable positive dependence; correlated words and exploratory subgroup selection complicate that interpretation.
+With a dataset, explicit mismatched preprocessing is rejected.
 
-Frequency intervals resample whole documents independently within groups and recompute pooled token frequencies: 500 replicates, seed 1729, marginal 95% percentile intervals. Word detail accepts 100–1000 replicates. Both groups need at least five supporting documents and nonconstant document rates; otherwise intervals are withheld. Absence is not falsely assigned zero uncertainty. Intervals are neither simultaneous nor selection-adjusted.
+## Methodology and Limitations
 
-Duplicates use NFKC/casefold/whitespace-normalized text identity. Counts retain duplicates but inference is disabled; conflicting labels are reported. Near-duplicates and author/prompt/source clustering are not resolved. Metadata counts flag groups with fewer than ten documents/class. Missing source metadata prevents source-level bias analysis.
+### Tokenization
 
-Small p-values do not imply practical importance, generalization or authorship. Topic, source, prompt, editing, paraphrasing, language proficiency, sampling bias and dataset shift can dominate patterns. Sentence count is a punctuation heuristic; vocabulary diversity is unique analysis tokens / analysis tokens and depends on length. No classifier or verified authorship probability exists in this slice.
+Tokenization applies NFKC, optional casefolding, curved-apostrophe normalization and Unicode alphanumeric token matching, preserving internal apostrophes.
 
-## Privacy and deployment boundaries
+Punctuation separates tokens; decimals split at punctuation.
 
-Raw CSV/text is processed transiently and never intentionally written to disk. Normalized tokens remain sensitive: they and selected metadata stay in bounded process memory. Sessions become inaccessible after TTL; expired entries are physically pruned on the next store access, not by a background timer. Restart clears memory. This is not forensic secure erasure. Validation and text analysis do not create sessions.
+Numeric-only tokens are removed by default; alphanumeric tokens remain. Stop words are explicitly supplied, not a hidden language list.
 
-No client filenames are used; content is never executed. Validation errors omit input echoes. Disable body/header logging at proxies too. A global budget is not fair per-user rate limiting; request buffering and slow clients still need ingress controls. Before any public deployment, add authentication, TLS, proxy byte/time/concurrency limits, dependency/security review and load testing. Use one worker until shared session storage is deliberately implemented. **Do not deploy this branch yet.**
+No stemming or lemmatization is performed. Unicode regex segmentation is not reliable word segmentation for every language.
 
-## Verification and troubleshooting
+### Frequency and Prevalence
+
+For group \(g\):
+
+- Token probability = word occurrences / total analysis tokens.
+- Frequency = 1000 times that probability.
+- Prevalence = documents containing the word / documents in the group.
+
+Signed difference is AI-labelled minus human-labelled frequency; ranking uses its absolute value.
+
+Ratios are unsmoothed and null when the human denominator is zero or either token total is zero.
+
+### Statistical Inference
+
+Inference requires at least 10 documents per group and no normalized-text duplicates; these are conservative eligibility rules, not guarantees.
+
+Prevalence uses Wilson intervals and two-sided Fisher exact tests.
+
+Benjamini–Hochberg (BH) adjusts over the entire selected vocabulary **before display/support filtering**.
+
+Its FDR interpretation assumes independence or suitable positive dependence; correlated words and exploratory subgroup selection complicate that interpretation.
+
+### Bootstrap Intervals
+
+Frequency intervals resample whole documents independently within groups and recompute pooled token frequencies:
+
+- 500 replicates.
+- Seed: `1729`.
+- Marginal 95% percentile intervals.
+
+Word detail accepts 100–1000 replicates.
+
+Both groups need at least five supporting documents and nonconstant document rates; otherwise intervals are withheld.
+
+Absence is not falsely assigned zero uncertainty. Intervals are neither simultaneous nor selection-adjusted.
+
+### Duplicate Handling
+
+Duplicates use NFKC/casefold/whitespace-normalized text identity.
+
+Counts retain duplicates but inference is disabled; conflicting labels are reported.
+
+Near-duplicates and author/prompt/source clustering are not resolved.
+
+Metadata counts flag groups with fewer than ten documents/class. Missing source metadata prevents source-level bias analysis.
+
+### Interpretation and Limitations
+
+Small p-values do not imply practical importance, generalization or authorship.
+
+Topic, source, prompt, editing, paraphrasing, language proficiency, sampling bias and dataset shift can dominate patterns.
+
+Sentence count is a punctuation heuristic; vocabulary diversity is unique analysis tokens / analysis tokens and depends on length.
+
+No classifier or verified authorship probability exists in this slice.
+
+## Privacy and Deployment Boundaries
+
+Raw CSV/text is processed transiently and never intentionally written to disk.
+
+Normalized tokens remain sensitive: they and selected metadata stay in bounded process memory.
+
+Sessions become inaccessible after TTL; expired entries are physically pruned on the next store access, not by a background timer. Restart clears memory. This is not forensic secure erasure.
+
+Validation and text analysis do not create sessions.
+
+No client filenames are used; content is never executed. Validation errors omit input echoes.
+
+Disable body/header logging at proxies too.
+
+A global budget is not fair per-user rate limiting; request buffering and slow clients still need ingress controls.
+
+Before treating this as a production service, add authentication, TLS, proxy byte/time/concurrency limits, dependency/security review and load testing.
+
+Use one worker until shared session storage is deliberately implemented.
+
+**Public HTTPS hosting does not replace these safeguards.**
+
+## Verification and Troubleshooting
 
 Run from `backend/` after activating the virtual environment:
 
@@ -150,12 +330,43 @@ python -m pytest -q
 python -m build
 ```
 
-The backend suite passed locally (77 tests). The frontend suite passed locally (6 tests), and frontend lint and production build passed. Tests cover Unicode, counts, zero denominators, known statistical values, resampling reproducibility, duplicates, filters, schemas, malformed/oversized CSV, chunked bodies, text validation, CORS, session isolation/expiry, rate limits and safe errors. Local browser checks covered valid CSV upload through JSON export and rejection of an invalid-header CSV. These checks do not cover production deployment, classifier evaluation, stress/security audits, or public-facing operational safeguards. Direct dependencies are pinned; transitive dependencies are not locked.
+### Recorded Verification Results
 
-A 404 dataset error means missing/expired handle; re-upload. A 415 means wrong upload content type. A 413 means configured limits were exceeded. A 429 is the global request budget. A 503 indicates compute/session capacity. Do not weaken safety limits without resource testing.
+- Backend test suite: **80 passed**.
+- Frontend test suite: **10 passed**.
+- Frontend lint: **Passed**.
+- Frontend production build: **Passed**.
+- Backend: One non-blocking Starlette test-client deprecation warning.
 
-## Automated verification
+Tests cover Unicode, counts, zero denominators, known statistical values, resampling reproducibility, duplicates, filters, schemas, malformed/oversized CSV, chunked bodies, text validation, CORS, session isolation/expiry, rate limits and safe errors.
 
-GitHub Actions is configured in `.github/workflows/ci.yml`. It runs backend tests, frontend tests, and frontend lint plus production build. The maintainer reports that the latest Actions run is green.
+Local browser checks covered valid CSV upload through JSON export and rejection of an invalid-header CSV.
+
+These checks do not cover production deployment, classifier evaluation, stress/security audits, or public-facing operational safeguards.
+
+Direct dependencies are pinned; transitive dependencies are not locked.
+
+### Troubleshooting
+
+| Status / Error | Meaning |
+|---|---|
+| `404` dataset error | Missing or expired handle; re-upload the dataset. |
+| `415` | Wrong upload content type. |
+| `413` | Configured request limits were exceeded. |
+| `429` | Global request budget was exceeded. |
+| `503` | Compute/session capacity is unavailable. |
+| `422 empty_dataset` | Dataset Lab browser validation issue under investigation; see [Issue #12](https://github.com/Tejas-Shivaji/word-detective-pro/issues/12). |
+
+Do not weaken safety limits without resource testing.
+
+## Automated Verification
+
+GitHub Actions is configured in `.github/workflows/ci.yml`.
+
+It runs backend tests, frontend tests, and frontend lint plus production build.
 
 Passing CI and local checks do not establish production deployment readiness. Security review, load testing, authentication, TLS and deployment safeguards remain separate tasks.
+
+---
+
+**Word Detective Pro — Explainable writing-pattern research, with transparent methodology and limitations.**
