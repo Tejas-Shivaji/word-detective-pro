@@ -54,6 +54,16 @@ def test_validate_does_not_store_and_upload_returns_real_summary(client):
     assert payload["summary"]["groups"]["ai"]["total_tokens"] == 3
     assert len(client.app.state.store.items) == 1
 
+@pytest.mark.parametrize("data", [b"", b"text,label\n"])
+def test_validate_rejects_empty_datasets(client, data):
+    response = client.post(
+        "/api/datasets/validate",
+        content=data,
+        headers=CSV_HEADERS,
+        params=PARAMS,
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "empty_dataset"
 
 def test_word_endpoints_and_response_contracts(client):
     headers = token_headers(client)
