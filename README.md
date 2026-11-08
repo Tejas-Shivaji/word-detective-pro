@@ -1,5 +1,7 @@
-﻿# Word Detective Pro
+# Word Detective Pro
 
+[Open the live website - Word Detective Pro](https://word-detective-web.onrender.com)
+[GitHub repository](https://github.com/Tejas-Shivaji/word-detective-pro)
 Explainable NLP and writing-pattern research platform. **Not an authorship detector.** Corpus labels, word frequencies, p-values and confidence intervals cannot establish who or what authored a text.
 
 ## Status and scope
@@ -10,7 +12,7 @@ Local verification completed: 82 backend tests passed, 10 frontend tests passed,
 
 No verified authorship dataset or validated authorship classifier is included. Synthetic examples are for application testing only and must not be treated as evidence of actual authorship.
 
-**Known issue:** Browser-based Dataset Lab CSV validation can return `422 empty_dataset` even when the request payload appears present. The root cause is unconfirmed. Track the investigation in [issue #12](https://github.com/Tejas-Shivaji/word-detective-pro/issues/12). A successful direct API validation does not by itself confirm that the browser workflow is working.
+Dataset Lab validation note: The earlier browser report of 422 empty_dataset could not be reproduced in the latest local end-to-end browser workflow. Regression tests cover empty-body and header-only CSV rejection, and the valid browser workflow passed locally through upload, Word Explorer, word inspection and JSON export. The original incident root cause was not established, so this is documented as non-reproducible rather than a confirmed production bug fix. If it recurs, capture the exact browser request, content type, response and CSV bytes before changing the parser.
 
 ## Architecture
 
@@ -159,4 +161,3 @@ A 404 dataset error means missing/expired handle; re-upload. A 415 means wrong u
 GitHub Actions is configured in `.github/workflows/ci.yml`. It runs backend tests, frontend tests, and frontend lint plus production build. The GitHub Actions checks for the merged Dataset Lab regression-test PR passed: backend tests, frontend tests, and frontend lint plus production build.
 
 Passing CI and local checks do not establish production deployment readiness. Security review, load testing, authentication, TLS and deployment safeguards remain separate tasks.
-
